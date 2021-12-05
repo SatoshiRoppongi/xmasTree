@@ -19,9 +19,9 @@ class XmasTreePainter extends CustomPainter {
 
   static final phi = (math.sqrt(5) + 1) / 2;
 
-  final int seeds;
+  final int treeSize;
 
-  XmasTreePainter(this.seeds);
+  XmasTreePainter(this.treeSize);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -30,7 +30,7 @@ class XmasTreePainter extends CustomPainter {
     var paint = Paint();
     paint.color = Colors.green;
 
-    var path = Path();
+    var leaves = Path();
 
     // クリスマスツリー頂点の座標
     Offset topPos = Offset(size.width / 2, size.height / 5);
@@ -43,13 +43,13 @@ class XmasTreePainter extends CustomPainter {
     // クリスマスツリーを構成する三角形の1辺の長さ
     double sideLength = 0;
 
-    for (i = 3; i < 20; i++) {
+    for (i = 0; i < treeSize; i++) {
       // クリスマスツリー頂点からの距離 dft: distance from top
       dft = topPos.dy + (1 / 2) * math.pow(i + 1, 2).toDouble();
       // クリスマスツリーを構成する三角形の1辺の長さ
       sideLength = 10 * (i + 1);
 
-      path
+      leaves
         ..moveTo(topPos.dx, dft)
         ..lineTo(topPos.dx - sideLength * math.sin(math.pi / 6),
             dft + sideLength * math.cos(math.pi / 6))
@@ -57,15 +57,57 @@ class XmasTreePainter extends CustomPainter {
             dft + sideLength * math.cos(math.pi / 6));
     }
 
-    path.close();
+    leaves.close();
 
-    canvas.drawPath(path, paint);
+    canvas.drawPath(leaves, paint);
+
+    var trunkLeft = topPos.dx - i;
+    var trunkTop = dft + sideLength * math.cos(math.pi / 6);
+    var trunkWidth = 2 * i.toDouble();
+    var trunkHeight = i.toDouble();
 
     paint.color = Colors.brown;
-    var rect = Rect.fromLTWH(topPos.dx - i,
-        dft + sideLength * math.cos(math.pi / 6), 2 * i.toDouble(), i * 3);
+    var trunk = Rect.fromLTWH(trunkLeft, trunkTop, trunkWidth, trunkHeight);
 
-    canvas.drawRect(rect, paint);
+    canvas.drawRect(trunk, paint);
+
+    var standLeft = trunkLeft - i;
+    var standTop = trunkTop + trunkHeight;
+    var standWidth = 2 * trunkWidth;
+    var standHeight = 2 * trunkHeight;
+    var stand = Rect.fromLTWH(standLeft, standTop, standWidth, standHeight);
+    canvas.drawRect(stand, paint);
+
+    paint.color = Colors.yellow;
+    var star = Path();
+
+    double radius = i.toDouble();
+    // star..moveTo(topPos.dx, topPos.dy + radius);
+    for (int j = 0; j < 6; j++) {
+      var angle = -math.pi / 10 + j * 4 * math.pi / 5;
+      star
+        ..lineTo(radius * math.cos(angle) + topPos.dx,
+            radius * math.sin(angle) + topPos.dy);
+    }
+    star.close();
+
+    canvas.drawPath(star, paint);
+
+    List<MaterialColor> colorList = [
+      Colors.red,
+      Colors.blue,
+      Colors.lightGreen
+    ];
+    for (int j = 0; j < 30; j++) {
+      double randomPosY = math.Random().nextDouble() * (trunkTop - topPos.dy);
+      double randomPosX = 2 * (math.Random().nextDouble() - (1 / 2)) * randomPosY / 4;
+      int randomColorIndex = math.Random().nextInt(colorList.length);
+      paint.color = colorList[randomColorIndex];
+      canvas.drawCircle(
+          Offset(topPos.dx + randomPosX , topPos.dy + randomPosY),
+          i * size.width / 1000,
+          paint);
+    }
   }
 
   @override
@@ -91,9 +133,9 @@ class XmasTree extends StatefulWidget {
 }
 
 class _XmasTreeState extends State<XmasTree> {
-  double seeds = 100.0;
+  int treeSize = 20;
 
-  int get seedCount => seeds.floor();
+  int get seedCount => treeSize;
 
   @override
   Widget build(BuildContext context) {
@@ -117,9 +159,9 @@ class _XmasTreeState extends State<XmasTree> {
               color: Colors.transparent,
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.start,
+          child: Row(
+            //crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               Container(
                 decoration: BoxDecoration(
@@ -131,20 +173,20 @@ class _XmasTreeState extends State<XmasTree> {
                   width: 400,
                   height: 400,
                   child: CustomPaint(
-                    painter: XmasTreePainter(seedCount),
+                    painter: XmasTreePainter(treeSize),
                   ),
                 ),
               ),
-              Text("Showing $seedCount seeds"),
+              Text("木の大きさ $treeSize"),
               ConstrainedBox(
                 constraints: const BoxConstraints.tightFor(width: 300),
                 child: Slider.adaptive(
-                  min: 20,
-                  max: 2000,
-                  value: seeds,
+                  min: 3,
+                  max: 30,
+                  value: treeSize.toDouble(),
                   onChanged: (newValue) {
                     setState(() {
-                      seeds = newValue;
+                      treeSize = newValue.toInt();
                     });
                   },
                 ),
