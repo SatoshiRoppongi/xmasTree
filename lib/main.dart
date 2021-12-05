@@ -79,14 +79,18 @@ class XmasTreePainter extends CustomPainter {
 
     // for (int j = 0; j < 3; j++) {
     final garlandPath = Path();
-      double randomPosY = math.Random().nextDouble() * (trunkTop - topPos.dy);
-      garlandPath.moveTo(topPos.dx + 50, randomPosY);
-      
-      garlandPath.quadraticBezierTo(
-          topPos.dx + 45, randomPosY + 35, topPos.dx - 30, randomPosY + 50);
-    
-      garlandPath.close();
-      canvas.drawPath(garlandPath, garland);
+    // garlandPath.moveTo(topPos.dx + 50, randomPosY);
+    double startPointY = (trunkTop - topPos.dy) * 1 / 3;
+    double startPointX = topPos.dx - 10 * (treeSize / 3 + 1) / 2;
+    garlandPath.moveTo(startPointX, startPointY);
+
+    double endPointX = topPos.dx + sideLength * math.cos(math.pi / 3) * (2 / 3);
+    double endPointY = dft + endPointX * math.tan(math.pi / 3);
+
+    garlandPath.quadraticBezierTo((endPointX + startPointX) / 2,
+        (endPointY + startPointY) / 2, endPointX, endPointY);
+
+    canvas.drawPath(garlandPath, garland);
     // }
 
     // ボール
