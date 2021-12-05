@@ -6,19 +6,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 final Color primaryColor = Colors.orange;
-const TargetPlatform platform = TargetPlatform.android;
+// const TargetPlatform platform = TargetPlatform.android;
 
 void main() {
   runApp(XmasTree());
 }
 
 class XmasTreePainter extends CustomPainter {
-  static const seedRadius = 2.0;
-  static const scaleFactor = 4;
-  static const tau = math.pi * 2;
-
-  static final phi = (math.sqrt(5) + 1) / 2;
-
   final int treeSize;
 
   XmasTreePainter(this.treeSize);
@@ -44,9 +38,7 @@ class XmasTreePainter extends CustomPainter {
     double sideLength = 0;
 
     for (i = 0; i < treeSize; i++) {
-      // クリスマスツリー頂点からの距離 dft: distance from top
       dft = topPos.dy + (1 / 2) * math.pow(i + 1, 2).toDouble();
-      // クリスマスツリーを構成する三角形の1辺の長さ
       sideLength = 10 * (i + 1);
 
       leaves
@@ -58,9 +50,9 @@ class XmasTreePainter extends CustomPainter {
     }
 
     leaves.close();
-
     canvas.drawPath(leaves, paint);
 
+    // もみの木のみき
     var trunkLeft = topPos.dx - i;
     var trunkTop = dft + sideLength * math.cos(math.pi / 6);
     var trunkWidth = 2 * i.toDouble();
@@ -71,12 +63,47 @@ class XmasTreePainter extends CustomPainter {
 
     canvas.drawRect(trunk, paint);
 
+    // スタンドカバー
     var standLeft = trunkLeft - i;
     var standTop = trunkTop + trunkHeight;
     var standWidth = 2 * trunkWidth;
     var standHeight = 2 * trunkHeight;
     var stand = Rect.fromLTWH(standLeft, standTop, standWidth, standHeight);
     canvas.drawRect(stand, paint);
+
+    // ガーランド
+    var garland = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5;
+
+    // for (int j = 0; j < 3; j++) {
+    final garlandPath = Path();
+      double randomPosY = math.Random().nextDouble() * (trunkTop - topPos.dy);
+      garlandPath.moveTo(topPos.dx + 50, randomPosY);
+      
+      garlandPath.quadraticBezierTo(
+          topPos.dx + 45, randomPosY + 35, topPos.dx - 30, randomPosY + 50);
+    
+      garlandPath.close();
+      canvas.drawPath(garlandPath, garland);
+    // }
+
+    // ボール
+    List<MaterialColor> colorList = [
+      Colors.red,
+      Colors.blue,
+      Colors.lightGreen
+    ];
+    for (int j = 0; j < 30; j++) {
+      double randomPosY = math.Random().nextDouble() * (trunkTop - topPos.dy);
+      double randomPosX =
+          2 * (math.Random().nextDouble() - (1 / 2)) * randomPosY / 4;
+      int randomColorIndex = math.Random().nextInt(colorList.length);
+      paint.color = colorList[randomColorIndex];
+      canvas.drawCircle(Offset(topPos.dx + randomPosX, topPos.dy + randomPosY),
+          i * size.width / 1000, paint);
+    }
 
     paint.color = Colors.yellow;
     var star = Path();
@@ -85,43 +112,18 @@ class XmasTreePainter extends CustomPainter {
     // star..moveTo(topPos.dx, topPos.dy + radius);
     for (int j = 0; j < 6; j++) {
       var angle = -math.pi / 10 + j * 4 * math.pi / 5;
-      star
-        ..lineTo(radius * math.cos(angle) + topPos.dx,
-            radius * math.sin(angle) + topPos.dy);
+      star.lineTo(radius * math.cos(angle) + topPos.dx,
+          radius * math.sin(angle) + topPos.dy);
     }
     star.close();
 
     canvas.drawPath(star, paint);
-
-    List<MaterialColor> colorList = [
-      Colors.red,
-      Colors.blue,
-      Colors.lightGreen
-    ];
-    for (int j = 0; j < 30; j++) {
-      double randomPosY = math.Random().nextDouble() * (trunkTop - topPos.dy);
-      double randomPosX = 2 * (math.Random().nextDouble() - (1 / 2)) * randomPosY / 4;
-      int randomColorIndex = math.Random().nextInt(colorList.length);
-      paint.color = colorList[randomColorIndex];
-      canvas.drawCircle(
-          Offset(topPos.dx + randomPosX , topPos.dy + randomPosY),
-          i * size.width / 1000,
-          paint);
-    }
   }
 
   @override
   bool shouldRepaint(XmasTreePainter oldDelegate) {
-    return false; // oldDelegate.seeds != seeds;
-  }
-
-  // Draw a small circle representing a seed centered at (x,y).
-  void drawSeed(Canvas canvas, double x, double y) {
-    final paint = Paint()
-      ..strokeWidth = 2
-      ..style = PaintingStyle.fill
-      ..color = primaryColor;
-    canvas.drawCircle(Offset(x, y), seedRadius, paint);
+    // return false; // oldDelegate.seeds != seeds;
+    return oldDelegate.treeSize != treeSize;
   }
 }
 
@@ -140,9 +142,10 @@ class _XmasTreeState extends State<XmasTree> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      /*
       debugShowCheckedModeBanner: false,
       theme: ThemeData().copyWith(
-        platform: platform,
+        // platform: platform,
         brightness: Brightness.dark,
         sliderTheme: SliderThemeData.fromPrimaryColors(
           primaryColor: primaryColor,
@@ -151,6 +154,7 @@ class _XmasTreeState extends State<XmasTree> {
           valueIndicatorTextStyle: const DefaultTextStyle.fallback().style,
         ),
       ),
+      */
       home: Scaffold(
         body: Container(
           constraints: const BoxConstraints.expand(),
@@ -179,7 +183,7 @@ class _XmasTreeState extends State<XmasTree> {
               ),
               Text("木の大きさ $treeSize"),
               ConstrainedBox(
-                constraints: const BoxConstraints.tightFor(width: 300),
+                constraints: const BoxConstraints.tightFor(width: 400),
                 child: Slider.adaptive(
                   min: 3,
                   max: 30,
